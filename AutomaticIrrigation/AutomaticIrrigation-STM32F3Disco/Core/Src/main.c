@@ -69,15 +69,34 @@ uint8_t uartRxData = 0x00;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
-	adcData = HAL_ADC_GetValue(hadc);
-	HAL_ADC_Start_IT(hadc);
+uint8_t V_TO_MOISTURE(uint32_t volt)
+{
+	return (uint8_t)100-(volt*((3.0/4096.0))*(100.0/3.0));
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if (uartRxData == 0xFF)
-		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+	uint8_t moistureLevel = 0;
+	uint8_t threshold = 0;
+
+	adcData = HAL_ADC_GetValue(hadc);
+	moistureLevel = V_TO_MOISTURE(adcData);
+
+	// Qui andrebbe implementato un semaforo
+	threshold = uartRxData;
+
+
+	if (moistureLevel < threshold){
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
+	}
+
+	//HAL_ADC_Start_IT(hadc);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
 	HAL_UART_Receive_IT(huart, &uartRxData, 1/*sizeof(uint8_t)*/);
 }
 /* USER CODE END 0 */
@@ -116,8 +135,8 @@ int main(void)
   MX_ADC1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  HAL_ADC_Start_IT(&hadc1);
   HAL_UART_Receive_IT(&huart4, &uartRxData, 1/*sizeof(uint8_t)*/);
+  HAL_ADC_Start_IT(&hadc1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -205,7 +224,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
