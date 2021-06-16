@@ -88,16 +88,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 
 	if (moistureLevel < threshold){
-		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
 	}
+
+	HAL_Delay(1000);	// Aspetto 1 secondo per chiudere la pompa
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_RESET);
 
 	//HAL_ADC_Start_IT(hadc);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
-	HAL_UART_Receive_IT(huart, &uartRxData, 1/*sizeof(uint8_t)*/);
+	HAL_UART_Receive_IT(huart, &uartRxData, sizeof(uint8_t));
 }
 /* USER CODE END 0 */
 
@@ -135,7 +137,7 @@ int main(void)
   MX_ADC1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart4, &uartRxData, 1/*sizeof(uint8_t)*/);
+  HAL_UART_Receive_IT(&huart4, &uartRxData, sizeof(uint8_t));
   HAL_ADC_Start_IT(&hadc1);
   /* USER CODE END 2 */
 
