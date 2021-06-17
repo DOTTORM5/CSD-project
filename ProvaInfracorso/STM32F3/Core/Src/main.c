@@ -89,7 +89,7 @@ void write_led(uint8_t dato)
 
 void read_pia()
 {
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET); //alza il segnale di busy
 	data_pia_rx = 0;
 	data_pia_rx |= (uint8_t) (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_8)<<0);
 	data_pia_rx |= (uint8_t) (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_9)<<1);
@@ -99,9 +99,9 @@ void read_pia()
 	data_pia_rx |= (uint8_t) (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_13)<<5);
 	data_pia_rx |= (uint8_t) (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_14)<<6);
 	data_pia_rx |= (uint8_t) (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_15)<<7);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET); //abbassa il segnale di busy
 	//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0, GPIO_PIN_SET); //alza il segnale di ack
 
 }
 
@@ -122,6 +122,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(susp) //Qui ci vorrebbe un semaforo
 		return;
+
+	HAL_Delay(1000); //Aspetto 1 secondi tra un messaggio e un altro
 
 	for(uint8_t i = 0; i<N; i++){
 		write_led(data_uart_rx[cont_uart][i]);
