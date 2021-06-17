@@ -102,15 +102,6 @@ void write_pia(uint8_t dato)
 	while(GPIO_PIN_SET != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0)); //POLLING SU ACK
 }
 
-
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-//{
-//	uint8_t dato = data_pia_tx[i_pia];
-//	scrittura_pia(dato);
-//
-//	i_pia = (i_pia + 1)%9;
-//}
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	dato = data_pia_tx[cont_pia];
@@ -172,8 +163,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //scrittura_pia(0x07);
   for(uint8_t i = 0; i<M; i++){
-	  for(uint8_t j = 0; j<N; j++){
-		  data_uart_tx[i][j] = 0xFF;
+
+	  if(i != 5){
+		  for(uint8_t j = 0; j<N; j++){
+			  data_uart_tx[i][j] = 255-j;
+		  }
+	  }else{
+		  for(uint8_t j = 0; j<N; j++){
+			  data_uart_tx[i][j] = 0x00;
+		  }
 	  }
   }
 
