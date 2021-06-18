@@ -1,0 +1,64 @@
+* Area dati, variabili necessarie.
+
+M = ...		* Numero messaggi massimo da ricevere
+N = ...		* Numero di bytes per messaggio
+
+suspend = 0
+lock = 0
+flag_fine = 0
+
+cnt_messg = 0	* Contatore messaggi ricevuti
+cnt_bytes = 0	* Contatore bytes ricevuti
+cnt_pia = 0	* Contatore messaggi ricevuti dalla PIA
+
+main():
+	pia_init()
+	usart_init()
+	abilito interrupt mascherando lo Status Register
+	ciclo infinito
+
+
+* Questa versione è identica a quella fatta al compito solo che quando devo terminare disabilito banalmente le interrupt.
+ISR_USART():
+	salvo i registri sullo stack
+
+	TAS(lock)
+	if flag_fine == 1: 
+		fine()
+	libero il semaforo
+
+	REG = dato_usart
+	cnt_bytes += 1
+	if cnt_bytes == N:
+		cnt_bytes = 0
+		cnt_messg += 1
+		if cnt_messg == M:
+			fine()
+		if REG == '0':
+			fine()
+	
+	
+	if suspend == 1:
+		 fine()
+
+	ripristino i registri dallo stack
+	RTE
+
+fine:	disabilito interrupt		
+	ripristino i registri dallo stack
+	RTE
+
+
+* Identica a quella fatta durante il compito
+IST_PIA():
+	salvo i registri sullo stack
+	leggo messaggio PIA
+	cnt_pia += 1
+	if cnt_pia == 2:
+		if TAS(lock):
+			flag_fine = 1
+			libero il semaforo
+		else:	
+			suspend = 1
+	ripristino i registri dallo stack
+	RTE

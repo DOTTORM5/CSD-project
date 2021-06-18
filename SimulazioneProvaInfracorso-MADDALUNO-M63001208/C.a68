@@ -1,0 +1,59 @@
+* C deve semplicemente inviare due messaggi a caso tramite PIA, addirittura lo fa anche in polling... piens!
+	ORG	$8000
+PIA	EQU	$2006		* Considero direttamente il porto B per trasmettere
+M	EQU	3		* Numero di messaggi da inviare (a 2 si dovrebbe fermare tutto comunque)
+ATTESA	EQU	10		* Contatore per aspettare tra l'invio di un messaggio e un altro
+
+
+	ORG	$8100
+MAIN	JSR	PIAINIT
+	JSR	SEND		* Non abilito le interrupt
+LOOP	JMP	LOOP
+
+
+	ORG	$8200
+PIAINIT	MOVEM.L	A0-A1/D0,-(A7)
+	MOVEA.L	#PIA,A0
+	MOVEA.L	#PIA+1,A1	
+	MOVE.B	#$00,(A1)
+	MOVE.B	#$FF,(A0)
+	MOVE.B	#%00100100,(A1)
+	MOVE.B	(A0),D0		* Lettura fittizia
+	MOVEM.L	(A7)+,A0-A1/D0
+	RTS
+
+SEND	MOVEM.L	A0-A1/D0-D2,-(A7)
+	MOVEA.L	#PIA,A0
+	MOVEA.L	#PIA+1,A1
+
+	CLR.B	D1
+
+LOOP1	CMP.B	#M,D0		* Controllo se ho mandato gli M messaggi (cosa inutile, a 2 mi devo fermare serve solo per testing)
+	BEQ	FINE
+
+	CLR.B	D1
+LOOP2	CMP.B	#ATTESA,D1	* Attendo un pò per inviare un messaggio
+	BEQ	SAL1
+	ADD.B	#1,D1
+	BRA	LOOP2
+
+SAL1	MOVE.B	(A0),D2		* Lettura fittizia
+	MOVE.B	#$FF,(A0)	* Mando il dato
+
+POLL	MOVE.B	(A1),D2		* Polling per aspettare che il sistema B abbia ricevuto
+	ANDI.B	#%10000000,D2
+	BEQ	POLL
+	
+	ADD.B	#1,D0
+	BRA	LOOP1	
+
+FINE	MOVEM.L	(A7)+,A0-A1/D0-D2
+	RTS
+	
+	END	MAIN
+
+
+
+
+
+

@@ -1,0 +1,132 @@
+00008000                                     1  	ORG	$8000
+00008000  =00002004                          2  PIA	EQU	$2004
+00008000  =00002002                          3  USART	EQU	$2002
+00008000  =0000000A                          4  M	EQU	10
+00008000  =0000000A                          5  N	EQU	10
+00008000                                     6  
+00008000  00                                 7  CNTM	DC.B	0
+00008001  00                                 8  CNTB	DC.B	0
+00008002  00                                 9  CNTPIA	DC.B	0
+00008003                                    10  
+00008003  00                                11  SUSP	DC.B	0
+00008004  00                                12  FLGF	DC.B	0
+00008005  00                                13  LOCK	DC.B	0
+00008006                                    14  
+00008100                                    15  	ORG	$8100
+00008100  4EB9 00008200                     16  MAIN	JSR	PIAIN
+00008106  4EB9 00008224                     17  	JSR	USARTIN
+0000810C  40C0                              18  	MOVE.W	SR,D0
+0000810E  0240 D8FF                         19  	ANDI.W	#$D8FF,D0
+00008112  46C0                              20  	MOVE.W	D0,SR
+00008114  4EF9 00008114                     21  LOOP	JMP	LOOP
+0000811A                                    22  
+00008200                                    23  	ORG	$8200
+00008200  48E7 80C0                         24  PIAIN	MOVEM.L	A0-A1/D0,-(A7)
+00008204  207C 00002004                     25  	MOVEA.L	#PIA,A0
+0000820A  227C 00002005                     26  	MOVEA.L	#PIA+1,A1
+00008210  12BC 0000                         27  	MOVE.B	#$00,(A1)
+00008214  10BC 0000                         28  	MOVE.B	#$00,(A0)
+00008218  12BC 0025                         29  	MOVE.B	#%00100101,(A1)
+0000821C  1010                              30  	MOVE.B	(A0),D0		* Lettura fittizia
+0000821E  4CDF 0301                         31  	MOVEM.L	(A7)+,A0-A1/D0
+00008222  4E75                              32  	RTS
+00008224                                    33  
+00008224  48E7 0080                         34  USARTIN	MOVEM.L	A0,-(A7)
+00008228  207C 00002003                     35  	MOVEA.L	#USART+1,A0	
+0000822E  10BC 005D                         36  	MOVE.B	#%01011101,(A0)
+00008232  10BC 0036                         37  	MOVE.B	#%00110110,(A0)
+00008236  4CDF 0100                         38  	MOVEM.L	(A7)+,A0
+0000823A  4E75                              39  	RTS
+0000823C                                    40  
+00008500                                    41  	ORG	$8500
+00008500  48E7 C0F8                         42  ISRPIA	MOVEM.L	A0-A4/D0-D1,-(A7)
+00008504  207C 00008005                     43  	MOVEA.L	#LOCK,A0
+0000850A  227C 00008004                     44  	MOVEA.L	#FLGF,A1
+00008510  247C 00008003                     45  	MOVEA.L	#SUSP,A2
+00008516  267C 00002004                     46  	MOVEA.L	#PIA,A3
+0000851C  287C 00008002                     47  	MOVEA.L	#CNTPIA,A4
+00008522                                    48  	
+00008522  1014                              49  	MOVE.B	(A4),D0
+00008524  1213                              50  	MOVE.B	(A3),D1		* Lettura del dato
+00008526                                    51  	
+00008526  5200                              52  	ADD.B	#1,D0
+00008528  B03C 0002                         53  	CMP.B	#2,D0
+0000852C  6600 001C                         54  	BNE	FINE1
+00008530                                    55  
+00008530  4AD0                              56  	TAS	(A0)		* Chiedo il semaforo
+00008532  6600 0012                         57  	BNE	SAL1
+00008536                                    58  
+00008536  12BC 0001                         59  	MOVE.B	#1,(A1)
+0000853A                                    60  
+0000853A  1210                              61  	MOVE.B	(A0),D1		* Libero il semaforo
+0000853C  0201 007F                         62  	ANDI.B	#%01111111,D1
+00008540  1081                              63  	MOVE.B	D1,(A0)
+00008542  6000 0006                         64  	BRA	FINE1
+00008546                                    65  
+00008546  14BC 0001                         66  SAL1	MOVE.B	#1,(A2)		* Semaforo non ottenuto	
+0000854A                                    67  
+0000854A  1880                              68  FINE1	MOVE.B	D0,(A4)
+0000854C  4CDF 1F03                         69  	MOVEM.L	(A7)+,A0-A4/D0-D1
+00008550  4E73                              70  	RTE
+00008552                                    71  	
+00008552                                    72  
+00008600                                    73  	ORG	$8600
+00008600  48E7 E0E0                         74  ISRUS	MOVEM.L	A0-A2/D0-D2,-(A7)
+00008604                                    75  	
+00008604  207C 00008005                     76  	MOVEA.L	#LOCK,A0
+0000860A  227C 00008004                     77  	MOVEA.L	#FLGF,A1
+00008610                                    78  
+00008610  4AD0                              79  	TAS	(A0)
+00008612  1011                              80  	MOVE.B	(A1),D0		* Mi salvo il valore di flag_fine
+00008614                                    81  	
+00008614  1210                              82  	MOVE.B	(A0),D1		* Libero il semaforo
+00008616  0201 007F                         83  	ANDI.B	#%01111111,D1
+0000861A  1081                              84  	MOVE.B	D1,(A0)
+0000861C                                    85  
+0000861C  B03C 0001                         86  	CMP.B	#1,D0		* Controllo il flag fine
+00008620  6700 0052                         87  	BEQ	FINE2
+00008624                                    88  
+00008624                                    89  
+00008624  207C 00002002                     90  	MOVEA.L	#USART,A0
+0000862A  227C 00008001                     91  	MOVEA.L #CNTB,A1
+00008630  247C 00008000                     92  	MOVEA.L	#CNTM,A2
+00008636                                    93  	
+00008636  1011                              94  	MOVE.B	(A1),D0		* Contatore bytes
+00008638  1212                              95  	MOVE.B	(A2),D1		* Contatore messaggi
+0000863A                                    96  	
+0000863A  1410                              97  	MOVE.B	(A0),D2		* Leggo il dato
+0000863C  5200                              98  	ADD.B	#1,D0
+0000863E                                    99  	
+0000863E  B03C 000A                        100  	CMP.B	#N,D0
+00008642  6600 0016                        101  	BNE	SAL2
+00008646  4200                             102  	CLR.B	D0
+00008648  5201                             103  	ADD.B	#1,D1
+0000864A  B23C 000A                        104  	CMP.B	#M,D1		* Vedo se sono arrivato a M messaggi
+0000864E  6700 0024                        105  	BEQ	FINE2
+00008652                                   106  	
+00008652  B43C 0000                        107  	CMP.B	#0,D2		* Vedo se l'ultimo carattere è 0
+00008656  6700 001C                        108  	BEQ	FINE2
+0000865A                                   109  	
+0000865A  1280                             110  SAL2	MOVE.B	D0,(A1)		* Salvo i contatori in memoria
+0000865C  1481                             111  	MOVE.B	D1,(A2)
+0000865E                                   112  	
+0000865E  207C 00008003                    113  	MOVEA.L	#SUSP,A0
+00008664                                   114  	
+00008664  1010                             115  	MOVE.B	(A0),D0		* Controllo suspend
+00008666  B03C 0001                        116  	CMP.B	#1,D0
+0000866A  6700 0008                        117  	BEQ	FINE2
+0000866E                                   118  
+0000866E  4CDF 0707                        119  	MOVEM.L	(A7)+,A0-A2/D0-D2
+00008672  4E73                             120  	RTE
+00008674                                   121  
+00008674  302F 0018                        122  FINE2	MOVE.W	24(A7),D0	* Disabilito interrupt prendendo lo status presente sullo stack (ovvero quello del main)
+00008678  0040 0700                        123  	ORI.W	#$0700,D0
+0000867C  3F40 0018                        124  	MOVE.W	D0,24(A7)
+00008680                                   125  	
+00008680  4CDF 0707                        126  	MOVEM.L	(A7)+,A0-A2/D0-D2
+00008684  4E73                             127  	RTE
+00008686                                   128  
+00008686                                   129  	END	MAIN
+
+No errors detected
+No warnings generated

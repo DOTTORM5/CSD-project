@@ -1,0 +1,49 @@
+* A deve semplicemente inviare M messaggi al nodo B tramite USART
+	ORG	$8000
+USART	EQU	$2002
+N	EQU	12	* Numero di bytes tot da mandare 4*3
+BUFF	DC.B	'abcdefg10hi0'
+
+	ORG	$8100
+MAIN	JSR	USARTIN	
+	JSR	SEND	* Non abilito le interrupt
+LOOP	JMP	LOOP
+
+	ORG	$8200
+USARTIN	MOVEM.L	A0,-(A7)
+	MOVEA.L	#USART+1,A0
+	MOVE.B	#%01011101,(A0)
+	MOVE.B	#%00110011,(A0)
+	MOVEM.L	(A7)+,A0
+	RTS
+
+SEND	MOVEM.L	A0-A2/D0-D1,-(A7)
+	MOVEA.L	#USART,A0
+	MOVEA.L	#USART+1,A1
+	MOVEA.L	#BUFF,A2
+
+	MOVE.B	#10,D0		* Eseguo un ciclo bloccante per non far andare in overrun il ricevitore
+LOOP2	NOP
+	DBRA	D0,LOOP2
+
+	CLR.B	D0
+LOOP1	CMP.B	#N,D0
+	BEQ	FINE
+	
+POLL	MOVE.B	(A1),D1	* Polling per vedere se DSR e TxRdy sono alti (dsr è in più)
+	ANDI.B	#%10000001,D1
+	CMP.B	#%10000001,D1
+	BNE	POLL
+
+	MOVE.B	(A2,D0),(A0) * Mando il dato
+
+
+
+	ADD.B	#1,D0 
+	BRA	LOOP1	
+
+FINE	MOVEM.L	(A7)+,A0-A2/D0-D1
+	RTS
+	
+	END	MAIN
+

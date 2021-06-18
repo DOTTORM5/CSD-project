@@ -1,0 +1,134 @@
+	ORG	$8000
+PIA	EQU	$2004
+USART	EQU	$2002
+M	EQU	10
+N	EQU	10
+
+CNTM	DC.B	0
+CNTB	DC.B	0
+CNTPIA	DC.B	0
+
+SUSP	DC.B	0
+FLGF	DC.B	0
+LOCK	DC.B	0
+
+	ORG	$8100
+MAIN	JSR	PIAIN
+	JSR	USARTIN
+	MOVE.W	SR,D0
+	ANDI.W	#$D8FF,D0
+	MOVE.W	D0,SR
+LOOP	JMP	LOOP
+
+	ORG	$8200
+PIAIN	MOVEM.L	A0-A1/D0,-(A7)
+	MOVEA.L	#PIA,A0
+	MOVEA.L	#PIA+1,A1
+	MOVE.B	#$00,(A1)
+	MOVE.B	#$00,(A0)
+	MOVE.B	#%00100101,(A1)
+	MOVE.B	(A0),D0		* Lettura fittizia
+	MOVEM.L	(A7)+,A0-A1/D0
+	RTS
+
+USARTIN	MOVEM.L	A0,-(A7)
+	MOVEA.L	#USART+1,A0	
+	MOVE.B	#%01011101,(A0)
+	MOVE.B	#%00110110,(A0)
+	MOVEM.L	(A7)+,A0
+	RTS
+
+	ORG	$8500
+ISRPIA	MOVEM.L	A0-A4/D0-D1,-(A7)
+	MOVEA.L	#LOCK,A0
+	MOVEA.L	#FLGF,A1
+	MOVEA.L	#SUSP,A2
+	MOVEA.L	#PIA,A3
+	MOVEA.L	#CNTPIA,A4
+	
+	MOVE.B	(A4),D0
+	MOVE.B	(A3),D1		* Lettura del dato
+	
+	ADD.B	#1,D0
+	CMP.B	#2,D0
+	BNE	FINE1
+
+	TAS	(A0)		* Chiedo il semaforo
+	BNE	SAL1
+
+	MOVE.B	#1,(A1)
+
+	MOVE.B	(A0),D1		* Libero il semaforo
+	ANDI.B	#%01111111,D1
+	MOVE.B	D1,(A0)
+	BRA	FINE1
+
+SAL1	MOVE.B	#1,(A2)		* Semaforo non ottenuto	
+
+FINE1	MOVE.B	D0,(A4)
+	MOVEM.L	(A7)+,A0-A4/D0-D1
+	RTE
+	
+
+	ORG	$8600
+ISRUS	MOVEM.L	A0-A2/D0-D2,-(A7)
+	
+	MOVEA.L	#LOCK,A0
+	MOVEA.L	#FLGF,A1
+
+	TAS	(A0)
+	MOVE.B	(A1),D0		* Mi salvo il valore di flag_fine
+	
+	MOVE.B	(A0),D1		* Libero il semaforo
+	ANDI.B	#%01111111,D1
+	MOVE.B	D1,(A0)
+
+	CMP.B	#1,D0		* Controllo il flag fine
+	BEQ	FINE2
+
+
+	MOVEA.L	#USART,A0
+	MOVEA.L #CNTB,A1
+	MOVEA.L	#CNTM,A2
+	
+	MOVE.B	(A1),D0		* Contatore bytes
+	MOVE.B	(A2),D1		* Contatore messaggi
+	
+	MOVE.B	(A0),D2		* Leggo il dato
+	ADD.B	#1,D0
+	
+	CMP.B	#N,D0
+	BNE	SAL2
+	CLR.B	D0
+	ADD.B	#1,D1
+	CMP.B	#M,D1		* Vedo se sono arrivato a M messaggi
+	BEQ	FINE2
+	
+	CMP.B	#0,D2		* Vedo se l'ultimo carattere è 0
+	BEQ	FINE2
+	
+SAL2	MOVE.B	D0,(A1)		* Salvo i contatori in memoria
+	MOVE.B	D1,(A2)
+	
+	MOVEA.L	#SUSP,A0
+	
+	MOVE.B	(A0),D0		* Controllo suspend
+	CMP.B	#1,D0
+	BEQ	FINE2
+
+	MOVEM.L	(A7)+,A0-A2/D0-D2
+	RTE
+
+FINE2	MOVE.W	24(A7),D0	* Disabilito interrupt prendendo lo status presente sullo stack (ovvero quello del main)
+	ORI.W	#$0700,D0
+	MOVE.W	D0,24(A7)
+	
+	MOVEM.L	(A7)+,A0-A2/D0-D2
+	RTE
+
+	END	MAIN
+
+
+
+
+

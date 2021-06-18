@@ -1,0 +1,56 @@
+00000000                                     1  * C deve semplicemente inviare due messaggi a caso tramite PIA, addirittura lo fa anche in polling... piens!
+00008000                                     2  	ORG	$8000
+00008000  =00002006                          3  PIA	EQU	$2006		* Considero direttamente il porto B per trasmettere
+00008000  =00000003                          4  M	EQU	3		* Numero di messaggi da inviare (a 2 si dovrebbe fermare tutto comunque)
+00008000  =0000000A                          5  ATTESA	EQU	10		* Contatore per aspettare tra l'invio di un messaggio e un altro
+00008000                                     6  
+00008000                                     7  
+00008100                                     8  	ORG	$8100
+00008100  4EB9 00008200                      9  MAIN	JSR	PIAINIT
+00008106  4EB9 00008224                     10  	JSR	SEND		* Non abilito le interrupt
+0000810C  4EF9 0000810C                     11  LOOP	JMP	LOOP
+00008112                                    12  
+00008112                                    13  
+00008200                                    14  	ORG	$8200
+00008200  48E7 80C0                         15  PIAINIT	MOVEM.L	A0-A1/D0,-(A7)
+00008204  207C 00002006                     16  	MOVEA.L	#PIA,A0
+0000820A  227C 00002007                     17  	MOVEA.L	#PIA+1,A1	
+00008210  12BC 0000                         18  	MOVE.B	#$00,(A1)
+00008214  10BC 00FF                         19  	MOVE.B	#$FF,(A0)
+00008218  12BC 0024                         20  	MOVE.B	#%00100100,(A1)
+0000821C  1010                              21  	MOVE.B	(A0),D0		* Lettura fittizia
+0000821E  4CDF 0301                         22  	MOVEM.L	(A7)+,A0-A1/D0
+00008222  4E75                              23  	RTS
+00008224                                    24  
+00008224  48E7 E0C0                         25  SEND	MOVEM.L	A0-A1/D0-D2,-(A7)
+00008228  207C 00002006                     26  	MOVEA.L	#PIA,A0
+0000822E  227C 00002007                     27  	MOVEA.L	#PIA+1,A1
+00008234                                    28  
+00008234  4201                              29  	CLR.B	D1
+00008236                                    30  
+00008236  B03C 0003                         31  LOOP1	CMP.B	#M,D0		* Controllo se ho mandato gli M messaggi (cosa inutile, a 2 mi devo fermare serve solo per testing)
+0000823A  6700 0022                         32  	BEQ	FINE
+0000823E                                    33  
+0000823E  4201                              34  	CLR.B	D1
+00008240  B23C 000A                         35  LOOP2	CMP.B	#ATTESA,D1	* Attendo un pò per inviare un messaggio
+00008244  6700 0006                         36  	BEQ	SAL1
+00008248  5201                              37  	ADD.B	#1,D1
+0000824A  60F4                              38  	BRA	LOOP2
+0000824C                                    39  
+0000824C  1410                              40  SAL1	MOVE.B	(A0),D2		* Lettura fittizia
+0000824E  10BC 00FF                         41  	MOVE.B	#$FF,(A0)	* Mando il dato
+00008252                                    42  
+00008252  1411                              43  POLL	MOVE.B	(A1),D2		* Polling per aspettare che il sistema B abbia ricevuto
+00008254  0202 0080                         44  	ANDI.B	#%10000000,D2
+00008258  67F8                              45  	BEQ	POLL
+0000825A                                    46  	
+0000825A  5200                              47  	ADD.B	#1,D0
+0000825C  60D8                              48  	BRA	LOOP1	
+0000825E                                    49  
+0000825E  4CDF 0307                         50  FINE	MOVEM.L	(A7)+,A0-A1/D0-D2
+00008262  4E75                              51  	RTS
+00008264                                    52  	
+00008264                                    53  	END	MAIN
+
+No errors detected
+No warnings generated
