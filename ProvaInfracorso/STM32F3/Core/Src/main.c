@@ -61,7 +61,7 @@ static void MX_SPI1_Init(void);
 static void MX_USB_PCD_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
-uint8_t cont_pia = 0;
+uint8_t cont_pia = 0; 
 uint8_t susp = 0;
 
 uint8_t data_pia_rx = 0;
@@ -74,9 +74,10 @@ uint8_t cont_uart = 0;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*funzione utilizzata per l'accensione dei led in base al messaggio ricevuto*/
 void write_led(uint8_t dato)
 {
-
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, (dato & 1 ) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, ((dato >> 1) & 1 ? GPIO_PIN_SET : GPIO_PIN_RESET));
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, ((dato >> 2) & 1  ? GPIO_PIN_SET : GPIO_PIN_RESET));
@@ -87,6 +88,7 @@ void write_led(uint8_t dato)
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, ((dato >> 7) & 1 ? GPIO_PIN_SET : GPIO_PIN_RESET));
 }
 
+/*funzione utilizzata per leggere gli 8 bit ricevuti dalla pia*/
 void read_pia()
 {
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET); //alza il segnale di busy
@@ -105,6 +107,7 @@ void read_pia()
 
 }
 
+/*ISR di ricezione della pia scatenata dalla variazione sul fronte di discesa del segnale di STROBE*/
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(susp) //Qui ci vorrebbe un semaforo
@@ -118,6 +121,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		susp = 1;
 	}
 }
+
+/*ISR di ricezione dell'UART utilizzata per accendere i led e per inviare il messaggio di conferma di avvenuta ricezione */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(susp) //Qui ci vorrebbe un semaforo
@@ -141,6 +146,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	HAL_UART_Transmit_IT(huart, &data_uart_tx, sizeof(uint8_t)); //messaggio di conferma
 }
 
+/*ISR scaturita dall'avvenuta trasmissione del messaggio di conferma. È in questo punto che la periferica si predispone alla ricezione */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	HAL_UART_Receive_IT(huart, data_uart_rx[cont_uart], N*sizeof(uint8_t));
