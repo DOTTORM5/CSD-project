@@ -74,7 +74,7 @@ uint8_t V_TO_MOISTURE(uint32_t volt)
 	return (uint8_t)100-(volt*((3.0/4096.0))*(100.0/3.0));
 }
 
-
+/*ISR legata alla fine di una conversione dell'ADC. Viene confrontata l'umidità rilevata con la soglia ricevuta */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	uint8_t moistureLevel = 0;
@@ -88,17 +88,16 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 
 	if (moistureLevel < threshold){
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET); //viene azionato l'interruttore
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_SET); //viene acceso un led per confermare l'inizio dell'irrigazione
 	}
 
 	HAL_Delay(1000);	// Aspetto 1 secondo per chiudere la pompa
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET); 
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, GPIO_PIN_RESET);
-
-	//HAL_ADC_Start_IT(hadc);
 }
 
+/*ISR scatenata dalla avvenuta ricezione di un messaggio sull'UART. Il messaggio in questione rappresenta la soglia di umidità*/
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	HAL_UART_Receive_IT(huart, &uartRxData, sizeof(uint8_t));
