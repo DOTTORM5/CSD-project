@@ -74,16 +74,20 @@ uint8_t uartRxData;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/*ISR scatenata dall'avvenuta ricezione di un messaggio sulla periferica UART. In questo caso il messaggio ricevuto è un carattere scritto su terminale */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14); //accensione di un led per debug
 	HAL_UART_Receive_IT(&huart3, &uartRxData, sizeof(uint8_t));
 }
+
+/*ISR scatenata dalla pressione del PUSHBUTTON. Viene inviata la soglia di umidità all'altra board */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(uartRxData > 0x64){
-		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9);
-		uartRxData = 0x64;
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_9); //se il valore ricevuto è maggiore di 100 viene acceso un led
+		uartRxData = 0x64; //e viene riportato al valore di soglia massima
 	}
 	uartTxData = uartRxData;
 	HAL_UART_Transmit(&huart4, &uartTxData, sizeof(uint8_t), HAL_MAX_DELAY);
