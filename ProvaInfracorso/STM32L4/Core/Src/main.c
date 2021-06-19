@@ -84,7 +84,7 @@ uint8_t cont_uart = 0;
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
+/*funzione utilizzata per inviare dati tramite pia */
 void write_pia(uint8_t dato)
 {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); //STROBE
@@ -102,6 +102,7 @@ void write_pia(uint8_t dato)
 	while(GPIO_PIN_SET != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0)); //POLLING SU ACK
 }
 
+/*ISR legata alla pressione del PUSHBUTTON */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	dato = data_pia_tx[cont_pia];
@@ -109,12 +110,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	cont_pia = (cont_pia + 1)%9;
 }
 
-
+/*ISR scatenata dalla avvenuta trasmissione del messaggio sulla periferica UART. In questo caso la periferica si mette in attesa del messaggio di conferma */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	HAL_UART_Receive_IT(huart, &data_uart_rx, sizeof(uint8_t));
 }
 
+/*ISR scatenata dalla ricezione del messaggio di conferma. Viene inviato il nuovo messaggio */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if(data_uart_rx == 0xFF){
