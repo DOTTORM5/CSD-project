@@ -2,12 +2,12 @@
 	ORG	$8000
 PIA	EQU	$2006		* Considero direttamente il porto B per trasmettere
 M	EQU	3		* Numero di messaggi da inviare (a 2 si dovrebbe fermare tutto comunque)
-ATTESA	EQU	10		* Contatore per aspettare tra l'invio di un messaggio e un altro
+ATTESA	EQU	20	* Contatore per aspettare tra l'invio di un messaggio e un altro
 
 
 	ORG	$8100
 MAIN	JSR	PIAINIT
-	JSR	SEND		* Non abilito le interrupt
+	JSR	SEND		* Qui tecnicamente non c'è nemmeno bisogno di abilitare le interrupt, vado direttamente in invio
 LOOP	JMP	LOOP
 
 
@@ -18,7 +18,7 @@ PIAINIT	MOVEM.L	A0-A1/D0,-(A7)
 	MOVE.B	#$00,(A1)
 	MOVE.B	#$FF,(A0)
 	MOVE.B	#%00100100,(A1)
-	MOVE.B	(A0),D0		* Lettura fittizia
+	MOVE.B	(A0),D0		* Lettura fittizia, anche se forse inutile
 	MOVEM.L	(A7)+,A0-A1/D0
 	RTS
 
@@ -51,6 +51,7 @@ FINE	MOVEM.L	(A7)+,A0-A1/D0-D2
 	RTS
 	
 	END	MAIN
+
 
 
 

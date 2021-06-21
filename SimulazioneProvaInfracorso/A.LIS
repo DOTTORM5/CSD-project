@@ -6,7 +6,7 @@
 0000800C                                     6  
 00008100                                     7  	ORG	$8100
 00008100  4EB9 00008200                      8  MAIN	JSR	USARTIN	
-00008106  4EB9 00008218                      9  	JSR	SEND	* Non abilito le interrupt
+00008106  4EB9 00008218                      9  	JSR	SEND	* Anche qui le interrupt non le abilito
 0000810C  4EF9 0000810C                     10  LOOP	JMP	LOOP
 00008112                                    11  
 00008200                                    12  	ORG	$8200
@@ -17,35 +17,38 @@
 00008212  4CDF 0100                         17  	MOVEM.L	(A7)+,A0
 00008216  4E75                              18  	RTS
 00008218                                    19  
-00008218  48E7 C0E0                         20  SEND	MOVEM.L	A0-A2/D0-D1,-(A7)
+00008218  48E7 E0E0                         20  SEND	MOVEM.L	A0-A2/D0-D2,-(A7)
 0000821C  207C 00002002                     21  	MOVEA.L	#USART,A0
 00008222  227C 00002003                     22  	MOVEA.L	#USART+1,A1
 00008228  247C 00008000                     23  	MOVEA.L	#BUFF,A2
-0000822E                                    24  
-0000822E  103C 000A                         25  	MOVE.B	#10,D0		* Eseguo un ciclo bloccante per non far andare in overrun il ricevitore
-00008232  4E71                              26  LOOP2	NOP
-00008234  51C8 FFFC                         27  	DBRA	D0,LOOP2
-00008238                                    28  
-00008238  4200                              29  	CLR.B	D0
-0000823A  B03C 000C                         30  LOOP1	CMP.B	#N,D0
-0000823E  6700 0016                         31  	BEQ	FINE
-00008242                                    32  	
-00008242  1211                              33  POLL	MOVE.B	(A1),D1	* Polling per vedere se DSR e TxRdy sono alti (dsr è in più)
-00008244  0201 0081                         34  	ANDI.B	#%10000001,D1
-00008248  B23C 0081                         35  	CMP.B	#%10000001,D1
-0000824C  66F4                              36  	BNE	POLL
-0000824E                                    37  
-0000824E  10B2 0000                         38  	MOVE.B	(A2,D0),(A0) * Mando il dato
-00008252                                    39  
-00008252                                    40  
-00008252                                    41  
-00008252  5200                              42  	ADD.B	#1,D0 
-00008254  60E4                              43  	BRA	LOOP1	
-00008256                                    44  
-00008256  4CDF 0703                         45  FINE	MOVEM.L	(A7)+,A0-A2/D0-D1
-0000825A  4E75                              46  	RTS
-0000825C                                    47  	
-0000825C                                    48  	END	MAIN
+0000822E                                    24  	
+0000822E  4282                              25  	CLR.L	D2
+00008230                                    26  
+00008230  103C 000A                         27  LOOP1 MOVE.B	#10,D0		* Eseguo un ciclo bloccante per non far andare in overrun il ricevitore
+00008234  4E71                              28  LOOP2	NOP
+00008236  51C8 FFFC                         29  	DBRA	D0,LOOP2
+0000823A                                    30  
+0000823A  4280                              31  	CLR.L	D0
+0000823C                                    32  	
+0000823C  B43C 000C                         33  	CMP.B	#N,D2
+00008240  6700 0016                         34  	BEQ	FINE
+00008244                                    35  	
+00008244  1211                              36  POLL	MOVE.B	(A1),D1	* Polling per vedere se DSR e TxRdy sono alti (dsr è in più)
+00008246  0201 0081                         37  	ANDI.B	#%10000001,D1
+0000824A  B23C 0081                         38  	CMP.B	#%10000001,D1
+0000824E  66F4                              39  	BNE	POLL
+00008250                                    40  
+00008250  10B2 0000                         41  	MOVE.B	(A2,D0),(A0) * Mando il dato
+00008254                                    42  
+00008254                                    43  
+00008254                                    44  
+00008254  5202                              45  	ADD.B	#1,D2
+00008256  60D8                              46  	BRA	LOOP1
+00008258                                    47  
+00008258  4CDF 0703                         48  FINE	MOVEM.L	(A7)+,A0-A2/D0-D1
+0000825C  4E75                              49  	RTS
+0000825E                                    50  	
+0000825E                                    51  	END	MAIN
 
 No errors detected
 No warnings generated

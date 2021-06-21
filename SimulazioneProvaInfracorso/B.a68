@@ -79,7 +79,7 @@ ISRUS	MOVEM.L	A0-A2/D0-D2,-(A7)
 	TAS	(A0)
 	MOVE.B	(A1),D0		* Mi salvo il valore di flag_fine
 	
-	MOVE.B	(A0),D1		* Libero il semaforo
+	MOVE.B	(A0),D1		* Libero il semaforo (ambiguo)
 	ANDI.B	#%01111111,D1
 	MOVE.B	D1,(A0)
 

@@ -2,12 +2,12 @@
 00008000                                     2  	ORG	$8000
 00008000  =00002006                          3  PIA	EQU	$2006		* Considero direttamente il porto B per trasmettere
 00008000  =00000003                          4  M	EQU	3		* Numero di messaggi da inviare (a 2 si dovrebbe fermare tutto comunque)
-00008000  =0000000A                          5  ATTESA	EQU	10		* Contatore per aspettare tra l'invio di un messaggio e un altro
+00008000  =00000014                          5  ATTESA	EQU	20	* Contatore per aspettare tra l'invio di un messaggio e un altro
 00008000                                     6  
 00008000                                     7  
 00008100                                     8  	ORG	$8100
 00008100  4EB9 00008200                      9  MAIN	JSR	PIAINIT
-00008106  4EB9 00008224                     10  	JSR	SEND		* Non abilito le interrupt
+00008106  4EB9 00008224                     10  	JSR	SEND		* Qui tecnicamente non c'è nemmeno bisogno di abilitare le interrupt, vado direttamente in invio
 0000810C  4EF9 0000810C                     11  LOOP	JMP	LOOP
 00008112                                    12  
 00008112                                    13  
@@ -18,7 +18,7 @@
 00008210  12BC 0000                         18  	MOVE.B	#$00,(A1)
 00008214  10BC 00FF                         19  	MOVE.B	#$FF,(A0)
 00008218  12BC 0024                         20  	MOVE.B	#%00100100,(A1)
-0000821C  1010                              21  	MOVE.B	(A0),D0		* Lettura fittizia
+0000821C  1010                              21  	MOVE.B	(A0),D0		* Lettura fittizia, anche se forse inutile
 0000821E  4CDF 0301                         22  	MOVEM.L	(A7)+,A0-A1/D0
 00008222  4E75                              23  	RTS
 00008224                                    24  
@@ -32,7 +32,7 @@
 0000823A  6700 0022                         32  	BEQ	FINE
 0000823E                                    33  
 0000823E  4201                              34  	CLR.B	D1
-00008240  B23C 000A                         35  LOOP2	CMP.B	#ATTESA,D1	* Attendo un pò per inviare un messaggio
+00008240  B23C 0014                         35  LOOP2	CMP.B	#ATTESA,D1	* Attendo un pò per inviare un messaggio
 00008244  6700 0006                         36  	BEQ	SAL1
 00008248  5201                              37  	ADD.B	#1,D1
 0000824A  60F4                              38  	BRA	LOOP2

@@ -79,7 +79,7 @@
 00008610  4AD0                              79  	TAS	(A0)
 00008612  1011                              80  	MOVE.B	(A1),D0		* Mi salvo il valore di flag_fine
 00008614                                    81  	
-00008614  1210                              82  	MOVE.B	(A0),D1		* Libero il semaforo
+00008614  1210                              82  	MOVE.B	(A0),D1		* Libero il semaforo (ambiguo)
 00008616  0201 007F                         83  	ANDI.B	#%01111111,D1
 0000861A  1081                              84  	MOVE.B	D1,(A0)
 0000861C                                    85  
